@@ -12,7 +12,6 @@ pantalla = pygame.display.set_mode((pantalla_ancho, pantalla_alto))
 # Cargar imagen de fondo
 fondo = pygame.image.load('./assets/scenary/bg.jpeg')  
 
-
 NEGRO = (0, 0, 0)
 BLANCO = (255, 255, 255)
 ROJO = (255, 0, 0)
@@ -42,11 +41,9 @@ velocidad = 5
 esta_saltando = False
 salto_cuenta = 10
 
-
 # Vida del jugador
 vida_maxima = 100
 vida_actual = vida_maxima
-
 
 # Dibujar la barra de vida
 def dibujar_barra_vida(vida_actual, vida_maxima, x, y, ancho, alto):
@@ -72,14 +69,10 @@ def mostrar_mensaje_pausa():
     pantalla.blit(texto, texto_rect)
     pygame.display.flip()
     
-
 def agregar_enemigo():
     altura_enemigo = nuevo_alto_enemigo
     y_enemigo = pantalla_alto - altura_enemigo - 10  
     enemigos.append([pantalla_ancho, y_enemigo, nuevo_ancho_enemigo, altura_enemigo, enemigo_img])  
-
-
-
 
 def mover_y_dibujar_enemigos():
     for enemigo in enemigos:
@@ -109,8 +102,6 @@ while corriendo:
         pygame.time.wait(300)  # esto Evita múltiples pausas/reanudaciones rápidas
 
     if not en_pausa:
-
-    
         # Agregar enemigos
         if tiempo_actual - tiempo_ultimo_enemigo > frecuencia_enemigos:
             agregar_enemigo()
@@ -127,14 +118,11 @@ while corriendo:
         # Dibujar el personaje
         pantalla.blit(personaje_img, (x, y))
         
-        
         # Dibujar la barra de vida del jugador
         dibujar_barra_vida(vida_actual, vida_maxima, 20, 20, 200, 20)
     
          # Actualizar la pantalla
         pygame.display.update()
-
-        
 
         # Manejo del salto
         if not esta_saltando:
@@ -156,7 +144,6 @@ while corriendo:
             y = y_original
             esta_saltando = False
             salto_cuenta = 10
-
 
         # Mover y dibujar enemigos
         mover_y_dibujar_enemigos()
