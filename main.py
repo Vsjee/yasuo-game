@@ -23,11 +23,48 @@ nuevo_ancho = 100
 nuevo_alto = 150  
 personaje_img = pygame.transform.scale(personaje_img, (nuevo_ancho, nuevo_alto))
 
+
+
 # Cargar imagen del enemigo
 enemigo_img = pygame.image.load('./assets/characters/enemy.gif')  
 nuevo_ancho_enemigo = 100  
-nuevo_alto_enemigo = 160  
+nuevo_alto_enemigo = 140  
 enemigo_img = pygame.transform.scale(enemigo_img, (nuevo_ancho_enemigo, nuevo_alto_enemigo))
+
+class Enemigo:
+    def __init__(self, x, y, velocidad):
+        self.x = x
+        self.y = y
+        self.velocidad = velocidad
+        self.sprites = []
+        self.current_sprite = 0
+        self.animation_time = 0.1
+        self.time = 0
+
+        for i in range(7):  # Asume que tienes 7 fotogramas 
+            sprite = pygame.image.load(f'./assets/characters/enemy/sprite{i}.png')  # Cambia esto a la ruta de tus sprites
+            sprite = pygame.transform.flip(sprite, True, False)  # Voltea la imagen horizontalmente
+            sprite = pygame.transform.scale(sprite, (nuevo_ancho_enemigo, nuevo_alto_enemigo))  # Escala la imagen
+
+            self.sprites.append(sprite)
+
+        self.image = self.sprites[self.current_sprite]
+        self.mask = pygame.mask.from_surface(self.image) 
+
+    def animate(self, dt):
+        self.time += dt
+        if self.time >= self.animation_time:
+            self.time = 0
+            self.current_sprite += 1
+            if self.current_sprite >= len(self.sprites):
+                self.current_sprite = 0
+            self.image = self.sprites[self.current_sprite]
+
+    def update(self, dt):
+        self.animate(dt)
+        self.x -= self.velocidad
+        
+
 
 # Configuración del personaje
 x = 50
@@ -71,22 +108,23 @@ def mostrar_mensaje_pausa():
     
 def agregar_enemigo():
     altura_enemigo = nuevo_alto_enemigo
-    y_enemigo = pantalla_alto - altura_enemigo - 10  
-    enemigos.append([pantalla_ancho, y_enemigo, nuevo_ancho_enemigo, altura_enemigo, enemigo_img])  
+    y_enemigo = pantalla_alto - altura_enemigo - 1
+    enemigos.append(Enemigo(pantalla_ancho, y_enemigo, 3))  
 
-def mover_y_dibujar_enemigos():
+
+def mover_y_dibujar_enemigos(dt):
     for enemigo in enemigos:
-        pantalla.blit(enemigo[4], (enemigo[0], enemigo[1]))  # Dibujar la imagen del enemigo
-        enemigo[0] -= 3  # Mover el enemigo hacia la izquierda
+        enemigo.update(dt)
+        pantalla.blit(enemigo.image, (enemigo.x, enemigo.y))  # Dibujar la imagen del enemigo
 
     # Eliminar enemigos que salen de la pantalla
-    enemigos[:] = [enemigo for enemigo in enemigos if enemigo[0] > 0]
+    enemigos[:] = [enemigo for enemigo in enemigos if enemigo.x > 0]
 
 # Bucle del juego
 corriendo = True
 while corriendo:
     tiempo_actual = pygame.time.get_ticks()
-    pygame.time.delay(30)
+    dt = pygame.time.delay(30) / 1000  
     
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
@@ -106,7 +144,7 @@ while corriendo:
         if tiempo_actual - tiempo_ultimo_enemigo > frecuencia_enemigos:
             agregar_enemigo()
             tiempo_ultimo_enemigo = tiempo_actual
-        
+            mover_y_dibujar_enemigos(dt)
         # Movimiento izquierda y derecha
         if teclas[pygame.K_LEFT] and x > velocidad:
             x -= velocidad
@@ -146,8 +184,25 @@ while corriendo:
             salto_cuenta = 10
 
         # Mover y dibujar enemigos
-        mover_y_dibujar_enemigos()
+        mover_y_dibujar_enemigos(dt) 
 
+        jugador_mask = pygame.mask.from_surface(personaje_img)
+
+        # Comprobar colisiones con los enemigos
+        for enemigo in enemigos:
+            enemigo_mask = enemigo.mask
+            offset_x = enemigo.x - x
+            offset_y = enemigo.y - y
+            if jugador_mask.overlap(enemigo_mask, (offset_x, offset_y)):
+                print("¡Colisión!")
+                enemigo.x = x + personaje_img.get_width() 
+                vida_actual -= 10  # Reducir la vida del jugador
+                if vida_actual < 0:  # Asegurarse de que la vida no sea negativa
+                    vida_actual = 0
+
+            else:
+                enemigo.x -= enemigo.velocidad
+    
     else:
         # Mostrar mensaje de pausa
         mostrar_mensaje_pausa()
